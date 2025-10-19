@@ -29,7 +29,7 @@ public class Order {
     // ============================================
     // RELATIONSHIP: Order → User (N:1, owning side)
     // ============================================
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "client_id", nullable = false)
     private User client;
 

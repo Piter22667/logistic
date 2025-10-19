@@ -24,12 +24,12 @@ public class OrderStatusHistory {
     // ============================================
 
     // OrderStatusHistory → Order (N:1, owning side)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
     // OrderStatusHistory → User (N:1, optional, for changed_by)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "changed_by")
     private User changedBy;
 
