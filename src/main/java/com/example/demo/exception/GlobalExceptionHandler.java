@@ -79,4 +79,13 @@ public class GlobalExceptionHandler {
         errors.put("message", "Причеп з таким номером вже існує");
         return ResponseEntity.badRequest().body(errors);
     }
+
+    //User exception
+    @ExceptionHandler(UserNotFoundByEmailException.class)
+    public ResponseEntity<Map<String, String>> handleUserNotFoundByEmailException(UserNotFoundByEmailException ex) {
+        log.warn("User not found by email: {}", ex.getMessage());
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", "Користувача зі вказаним email не знайдено");
+        return ResponseEntity.badRequest().body(errors);
+    }
 }

@@ -135,4 +135,11 @@ public class DriverService {
 
         driverRepository.save(driver);
     }
+
+    public DriversResponseDto updateDriverStatus(long id, DriverStatus driverStatus) {
+        Driver driver = driverRepository.findById(id).orElseThrow(
+                () -> new DriverNotExistsException("Водія з id " + id + " не існує."));
+
+        return DriverMapper.toDto(driver);
+    }
 }

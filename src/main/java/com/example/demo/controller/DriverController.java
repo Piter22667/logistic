@@ -3,9 +3,12 @@ package com.example.demo.controller;
 import com.example.demo.dto.response.DriversResponseDto;
 import com.example.demo.dto.reuqest.DriverRequestDto;
 import com.example.demo.dto.reuqest.UpdateDriverDto;
+import com.example.demo.dto.reuqest.UpdateDriverStatusDto;
 import com.example.demo.service.DriverService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +26,12 @@ public class DriverController {
     public ResponseEntity<List<DriversResponseDto>> getAllDrivers() {
         List<DriversResponseDto> drivers = driverService.getAllDrivers();
         return ResponseEntity.ok(drivers);
+    }
+
+    @GetMapping("/testDriver")
+    public String getTestDriver(HttpServletRequest request) {
+        DriversResponseDto driver = driverService.getAllDrivers().get(0);
+        return driver.getFirstName() + " HttpServlet Session id: " + request.getSession().getId();
     }
 
     @GetMapping("/{Id}")
@@ -49,4 +58,19 @@ public class DriverController {
         driverService.deleteDriver(Id);
         return ResponseEntity.noContent().build();
     }
+
+
+
+
+    /// Admin access required further
+
+    @PostMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<DriversResponseDto> updateDriverStatus(
+            @PathVariable long id,
+            @Valid @RequestBody UpdateDriverStatusDto updateDriverStatusDto) {
+        DriversResponseDto driver = driverService.updateDriverStatus(id, updateDriverStatusDto.getDriverStatus());
+        return ResponseEntity.ok(driver);
+    }
+
 }

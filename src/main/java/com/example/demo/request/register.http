@@ -1,0 +1,14 @@
+###
+POST http://localhost:8080/users/register
+Content-Type: application/json
+
+{
+  "email": "newtest@mail.com",
+  "password": "r@123",
+  "role": "CLIENT",
+  "fullName": "New Test User",
+  "companyName": "Anything",
+  "phone": "+380667125262",
+  "address": "Texas"
+}
+
