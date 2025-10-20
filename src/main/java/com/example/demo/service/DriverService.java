@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.response.DriversResponseDto;
 import com.example.demo.dto.reuqest.DriverRequestDto;
 import com.example.demo.dto.reuqest.UpdateDriverDto;
+import com.example.demo.dto.reuqest.UpdateDriverStatusDto;
 import com.example.demo.entity.Driver;
 import com.example.demo.entity.User;
 import com.example.demo.enums.DriverStatus;
@@ -47,7 +48,7 @@ public class DriverService {
         User user = new User();
         user.setEmail(driverRequestDto.getEmail());
         user.setPasswordHash(passwordEncoder.encode(driverRequestDto.getPassword()));
-        user.setRole(UserRole.DRIVER);
+        user.setRole(UserRole.ROLE_DRIVER);
         user.setFullName(driverRequestDto.getFirstName() + " " + driverRequestDto.getLastName());
         user.setIsActive(true);
 
@@ -136,10 +137,12 @@ public class DriverService {
         driverRepository.save(driver);
     }
 
-    public DriversResponseDto updateDriverStatus(long id, DriverStatus driverStatus) {
+    public DriversResponseDto updateDriverStatus(long id, UpdateDriverStatusDto updateDriverStatusDto) {
         Driver driver = driverRepository.findById(id).orElseThrow(
                 () -> new DriverNotExistsException("Водія з id " + id + " не існує."));
 
+        driver.setStatus(updateDriverStatusDto.getDriverStatus());
+        driverRepository.save(driver);
         return DriverMapper.toDto(driver);
     }
 }

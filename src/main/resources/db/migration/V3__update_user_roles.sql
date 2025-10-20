@@ -1,0 +1,5 @@
+UPDATE users SET role = 'ROLE_' || role WHERE role NOT LIKE 'ROLE_%';
+
+ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_role;
+ALTER TABLE users ADD CONSTRAINT chk_role CHECK (role IN ('ROLE_CLIENT', 'ROLE_ADMIN', 'ROLE_DRIVER'));
+

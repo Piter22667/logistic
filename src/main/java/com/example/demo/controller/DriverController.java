@@ -64,12 +64,12 @@ public class DriverController {
 
     /// Admin access required further
 
-    @PostMapping("/{id}/status")
+    @PutMapping("/status/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DriversResponseDto> updateDriverStatus(
             @PathVariable long id,
-            @Valid @RequestBody UpdateDriverStatusDto updateDriverStatusDto) {
-        DriversResponseDto driver = driverService.updateDriverStatus(id, updateDriverStatusDto.getDriverStatus());
+            @RequestBody UpdateDriverStatusDto updateDriverStatusDto) {
+        DriversResponseDto driver = driverService.updateDriverStatus(id, updateDriverStatusDto);
         return ResponseEntity.ok(driver);
     }
 

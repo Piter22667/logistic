@@ -2,7 +2,7 @@ package com.example.demo.enums;
 
 public enum UserRole
 {
-    CLIENT,
-    ADMIN,
-    DRIVER
+    ROLE_CLIENT,
+    ROLE_ADMIN,
+    ROLE_DRIVER
 }
