@@ -20,6 +20,7 @@ public class OrderMapper {
         orderResponseDto.setDistanceKm(order.getDistanceKm());
         orderResponseDto.setPriceBreakdown(breakdown);
         orderResponseDto.setSenderContactInfo(senderContactInfo);
+        orderResponseDto.setEstimatedDurationMinutes(order.getEstimatedDurationMinutes());
         orderResponseDto.setRecipientContactInfo(recipientContactInfo);
 
         return orderResponseDto;
