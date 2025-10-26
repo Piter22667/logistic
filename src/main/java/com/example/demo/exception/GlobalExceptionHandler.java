@@ -88,4 +88,14 @@ public class GlobalExceptionHandler {
         errors.put("message", "Користувача зі вказаним email не знайдено");
         return ResponseEntity.badRequest().body(errors);
     }
+
+    //Orders exceptions
+
+    @ExceptionHandler(IncorrectPickUpDateException.class)
+    public ResponseEntity<Map<String, String>> handleIncorrectPickUpDateException(IncorrectPickUpDateException ex) {
+        log.warn("Incorrect pick up date: {}", ex.getMessage());
+        Map<String, String> errors = new HashMap<>();
+        errors.put("message", "Некоректна дата та час для пік-апу");
+        return ResponseEntity.badRequest().body(errors);
+    }
 }

@@ -1,8 +1,12 @@
 package com.example.demo.mapper;
 
+import com.example.demo.dto.response.TrailerForCargoTypeFromClientResponseDto;
 import com.example.demo.dto.response.VehicleResponseDto;
 import com.example.demo.dto.reuqest.VehicleRequestDto;
 import com.example.demo.entity.Vehicle;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class VehicleMapper {
     public static VehicleResponseDto toDto(Vehicle vehicle) {
@@ -30,5 +34,16 @@ public class VehicleMapper {
         vehicle.setLastMaintenanceDate(vehicleRequestDto.getLastMaintenanceDate());
 
         return vehicle;
+    }
+
+    public static List<TrailerForCargoTypeFromClientResponseDto> toTrailerForCargoTypeFromClientDto(List<Vehicle> vehicles) {
+        return vehicles.stream().map(v -> TrailerForCargoTypeFromClientResponseDto.builder()
+                .id(v.getId())
+                .licensePlate(v.getLicensePlate())
+                .trailerType(v.getTrailerType())
+                .capacityKg(v.getCapacityKg())
+                .manufactureYear(v.getManufactureYear())
+                .build()
+        ).collect(Collectors.toList());
     }
 }

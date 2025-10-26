@@ -1,10 +1,13 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.response.TrailerForCargoTypeFromClientResponseDto;
 import com.example.demo.dto.response.VehicleResponseDto;
 import com.example.demo.dto.reuqest.UpdateVehicleDto;
 import com.example.demo.dto.reuqest.VehicleRequestDto;
+import com.example.demo.enums.CargoType;
 import com.example.demo.service.VehicleService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,5 +44,18 @@ public class VehicleController {
                                                             @RequestBody UpdateVehicleDto updateVehicleDto) {
         VehicleResponseDto updatedVehicle = vehicleService.updateVehicle(id, updateVehicleDto);
         return ResponseEntity.ok(updatedVehicle);
+    }
+
+    @GetMapping("/trailerTypeByCargo/{cargoType}")
+    public ResponseEntity<String> getTrailerByCargoType(@PathVariable("cargoType") String cargoType) {
+        String recommendedTrailers = vehicleService.getTrailerByCargoTypeForClient(CargoType.valueOf(cargoType));
+        return ResponseEntity.ok(recommendedTrailers);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/trailerTypeByCargoAdmin/{cargoType}")
+    public ResponseEntity<List<TrailerForCargoTypeFromClientResponseDto>> getAvailableVehiclesByCargo(@PathVariable("cargoType") String cargoType) {
+        List<TrailerForCargoTypeFromClientResponseDto> dtos = vehicleService.getAllTrailersByCargoTypeFromClient(CargoType.valueOf(cargoType));
+        return ResponseEntity.ok(dtos);
     }
 }

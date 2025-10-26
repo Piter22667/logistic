@@ -1,16 +1,19 @@
 package com.example.demo.entity;
 
+import com.example.demo.entity.contactInfo.ContactInfo;
 import com.example.demo.enums.CargoType;
 import com.example.demo.enums.OrderStatus;
 import com.example.demo.enums.TrailerType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Data
 public class Order {
 
     @Id
@@ -71,6 +75,9 @@ public class Order {
     @Column(name = "destination_longitude", precision = 11, scale = 8)
     private BigDecimal destinationLongitude;
 
+    @Column(name = "route_polyline", columnDefinition = "TEXT")
+    private String routePolyline;
+
     // ============================================
     // CALCULATIONS
     // ============================================
@@ -100,17 +107,32 @@ public class Order {
     private LocalDateTime updatedAt;
 
     @Column(name = "scheduled_pickup_date")
-    private LocalDateTime scheduledPickupDate;
+    private LocalDate scheduledPickupDate; //TODO змінити тип поля в бд
+
+    // додаткова інформація про отримувачів та відправників
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "fullName", column = @Column(name = "sender_full_name", nullable = false)),
+            @AttributeOverride(name = "phoneNumber", column = @Column(name = "sender_phone_number", nullable = false)),
+            @AttributeOverride(name = "email", column = @Column(name = "sender_email"))
+    })
+    private ContactInfo senderInfo;
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "fullName", column = @Column(name = "receiver_full_name", nullable = false)),
+            @AttributeOverride(name = "phoneNumber" ,column = @Column(name = "receiver_phone_number", nullable = false)),
+            @AttributeOverride(name = "email", column = @Column(name = "receiver_email"))
+    })
+    private ContactInfo receiverInfo;
 
     // ============================================
     // RELATIONSHIPS
     // ============================================
 
-    // Order → Trip (1:1, bidirectional)
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Trip trip;
 
-    // Order → OrderStatusHistory (1:N, bidirectional)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     @Builder.Default
     private List<OrderStatusHistory> statusHistory = new ArrayList<>();
