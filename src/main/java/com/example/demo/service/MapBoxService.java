@@ -33,7 +33,7 @@ public class MapBoxService {
         V6ForwardGeocodingRequestOptions requestOptions = V6ForwardGeocodingRequestOptions.builder(address)
                 .autocomplete(false)
                 .language("en")
-                .types("address")
+                .types("address", "street", "place")
                 .build();
 
         MapboxV6Geocoding mapboxGeocoding = MapboxV6Geocoding.builder(

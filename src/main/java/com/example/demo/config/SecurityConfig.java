@@ -23,11 +23,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final MyUserDetailsService userDetailsService;
-
+    private final CorsConfig corsConfig;
     private final JwtFilter jwtFilter;
 
-    public SecurityConfig(MyUserDetailsService userDetailsService, JwtFilter jwtFilter) {
+    public SecurityConfig(MyUserDetailsService userDetailsService, CorsConfig corsConfig, JwtFilter jwtFilter) {
         this.userDetailsService = userDetailsService;
+        this.corsConfig = corsConfig;
         this.jwtFilter = jwtFilter;
     }
 
@@ -40,8 +41,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) // Вимкнути CSRF
+                .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/orders/calculate").permitAll()
+
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session ->

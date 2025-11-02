@@ -38,7 +38,7 @@ public class OrderController {
     }
 
     @PostMapping("/calculate")
-    @PreAuthorize("hasRole('ROLE_CLIENT') or hasRole('ROLE_ADMIN')")
+//    @PreAuthorize("hasRole('ROLE_CLIENT') or hasRole('ROLE_ADMIN')")
     public ResponseEntity<OrderCalculationAndRouteVisualizationResponseDto> calculateOrder(
             @RequestBody @Valid CalculateOrderAndVisualizeRouteRequestDto requestDto) {
         OrderCalculationAndRouteVisualizationResponseDto response =
