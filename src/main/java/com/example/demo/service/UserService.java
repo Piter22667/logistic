@@ -4,6 +4,7 @@ import com.example.demo.dto.response.AuthResponseDto;
 import com.example.demo.dto.reuqest.LoginRequestDto;
 import com.example.demo.dto.reuqest.RegisterRequestDto;
 import com.example.demo.entity.User;
+import com.example.demo.enums.UserRole;
 import com.example.demo.exception.EmailAlreadyExistsException;
 import com.example.demo.exception.UserNotFoundByEmailException;
 import com.example.demo.repository.UserRepository;
@@ -33,7 +34,7 @@ public class UserService {
         User user = User.builder()
                 .email(registerDto.getEmail())
                 .passwordHash(passwordEncoder.encode(registerDto.getPassword()))
-                .role(registerDto.getRole())
+                .role(UserRole.ROLE_CLIENT)
                 .fullName(registerDto.getFullName())
                 .companyName(registerDto.getCompanyName())
                 .phone(registerDto.getPhone())

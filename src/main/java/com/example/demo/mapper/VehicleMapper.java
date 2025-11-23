@@ -1,6 +1,7 @@
 package com.example.demo.mapper;
 
 import com.example.demo.dto.response.TrailerForCargoTypeFromClientResponseDto;
+import com.example.demo.dto.response.VehicleForOrderAssigningDto;
 import com.example.demo.dto.response.VehicleResponseDto;
 import com.example.demo.dto.reuqest.VehicleRequestDto;
 import com.example.demo.entity.Vehicle;
@@ -21,6 +22,15 @@ public class VehicleMapper {
         vehicleResponseDto.setCreatedAt(vehicle.getCreatedAt());
         vehicleResponseDto.setUpdatedAt(vehicle.getUpdatedAt());
 
+        return vehicleResponseDto;
+    }
+
+    public static VehicleForOrderAssigningDto toVehicleForOrderAssigningDto(Vehicle vehicle) {
+        VehicleForOrderAssigningDto vehicleResponseDto = new VehicleForOrderAssigningDto();
+        vehicleResponseDto.setId(vehicle.getId());
+        vehicleResponseDto.setLicensePlate(vehicle.getLicensePlate());
+        vehicleResponseDto.setTrailerType(String.valueOf(vehicle.getTrailerType()));
+        vehicleResponseDto.setStatus(String.valueOf(vehicle.getStatus()));
         return vehicleResponseDto;
     }
 

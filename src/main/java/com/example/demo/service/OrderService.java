@@ -1,26 +1,26 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.response.OrderCalculationAndRouteVisualizationResponseDto;
-import com.example.demo.dto.response.OrderResponseDto;
+import com.example.demo.dto.response.*;
 import com.example.demo.dto.reuqest.CalculateOrderAndVisualizeRouteRequestDto;
 import com.example.demo.dto.reuqest.CreateOrderRequestDto;
 import com.example.demo.dto.util.PriceBreakdownDto;
-import com.example.demo.entity.Order;
-import com.example.demo.entity.OrderStatusHistory;
-import com.example.demo.entity.User;
+import com.example.demo.entity.*;
 import com.example.demo.entity.contactInfo.ContactInfo;
-import com.example.demo.enums.OrderStatus;
-import com.example.demo.enums.TrailerType;
+import com.example.demo.enums.*;
 import com.example.demo.exception.IncorrectPickUpDateException;
 import com.example.demo.mapper.OrderMapper;
-import com.example.demo.repository.OrderRepository;
-import com.example.demo.repository.OrderStatusHistoryRepository;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.mapper.VehicleMapper;
+import com.example.demo.repository.*;
 import com.example.demo.util.PriceCalculator;
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
 import com.mapbox.geojson.Point;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,14 +37,20 @@ public class OrderService {
     private final RecommendationService recommendationService;
     private final MapBoxService mapBoxService;
     private final PriceCalculator priceCalculator;
+    private final VehicleRepository vehicleRepository;
+    private final DriverRepository driverRepository;
+    private final TripRepository tripRepository;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderStatusHistoryRepository orderStatusHistoryRepository, RecommendationService recommendationService, MapBoxService mapBoxService, PriceCalculator priceCalculator) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderStatusHistoryRepository orderStatusHistoryRepository, RecommendationService recommendationService, MapBoxService mapBoxService, PriceCalculator priceCalculator, VehicleRepository vehicleRepository, DriverRepository driverRepository, TripRepository tripRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.orderStatusHistoryRepository = orderStatusHistoryRepository;
         this.recommendationService = recommendationService;
         this.mapBoxService = mapBoxService;
         this.priceCalculator = priceCalculator;
+        this.vehicleRepository = vehicleRepository;
+        this.driverRepository = driverRepository;
+        this.tripRepository = tripRepository;
     }
 
     public OrderCalculationAndRouteVisualizationResponseDto calculateOrderAndRoute(
@@ -90,19 +96,20 @@ public class OrderService {
                 .build();
     }
 
+    @Transactional
     public OrderResponseDto createOrder(CreateOrderRequestDto orderRequestDto, Long clientId) {
 
         User client = userRepository.findById(clientId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if(orderRequestDto.getScheduledPickupDate() != null) {
+        if (orderRequestDto.getScheduledPickupDate() != null) {
             LocalDate minTimeAllowed = LocalDate.from(LocalDateTime.now().plusDays(1));
-            if(orderRequestDto.getScheduledPickupDate().isBefore(minTimeAllowed)) {
+            if (orderRequestDto.getScheduledPickupDate().isBefore(minTimeAllowed)) {
                 throw new IncorrectPickUpDateException("ScheduledPickupDate must be at least " + 2 + " hours from now");
             }
         }
 
-        if(orderRequestDto.getCargoWeightKg() != null && orderRequestDto.getCargoWeightKg().doubleValue() <= 0) {
+        if (orderRequestDto.getCargoWeightKg() != null && orderRequestDto.getCargoWeightKg().doubleValue() <= 0) {
             throw new IllegalArgumentException("Cargo weight must be greater than zero");
         }
 
@@ -182,6 +189,98 @@ public class OrderService {
         orderStatusHistory.setComment("Order created by client");
         orderStatusHistoryRepository.save(orderStatusHistory);
 
-         return OrderMapper.toDto(order, priceBreakdown, total, senderContactInfo, recipientContactInfo);
+        return OrderMapper.toDto(order, priceBreakdown, total, senderContactInfo, recipientContactInfo);
+    }
+
+    public Page<UserOrdersDto> getUserOrders(String email, Pageable pageable) {
+        Page<UserOrdersDto> userOrders = orderRepository.findOrdersWithCurrentStatusByClientEmail(email, pageable);
+
+        return userOrders;
+    }
+
+    public Page<UserOrderWithRouteDto> findOrdersByStatus(OrderStatus status, Pageable pageable) {
+        Page<UserOrderWithRouteDto> orders = orderRepository.findOrdersByStatus(status, pageable);
+        return orders;
+    }
+
+    public List<VehicleForOrderAssigningDto> getVehicleForOrderAssign(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
+
+        TrailerType trailerType = order.getTrailerType();
+
+        List<Vehicle> vehicles = vehicleRepository.findByTrailerTypeAndStatus(trailerType, VehicleStatus.AVAILABLE);
+
+        return vehicles.stream().map(VehicleMapper::toVehicleForOrderAssigningDto).toList();
+    }
+
+    @Transactional
+    public void assignDriverAndVehicle(Long orderId, Long driverId, Long vehicleId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
+
+        Driver driver = driverRepository.findById(driverId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found with id: " + driverId));
+
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehicle not found with id: " + vehicleId));
+
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is not in PENDING status");
+        }
+
+        if (vehicle.getStatus() != VehicleStatus.AVAILABLE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle is not in AVAILABLE status");
+        }
+
+        if (driver.getStatus() != DriverStatus.AVAILABLE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Driver is not in AVAILABLE status");
+        }
+
+        if(!vehicle.getTrailerType().equals(order.getTrailerType())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle trailer type does not match order trailer type");
+        }
+
+        order.setStatus(OrderStatus.ASSIGNED);
+        driver.setStatus(DriverStatus.BUSY);
+        vehicle.setStatus(VehicleStatus.IN_USE);
+
+        Trip trip = new Trip();
+        trip.setOrder(order);
+        trip.setDriver(driver);
+        trip.setVehicle(vehicle);
+        trip.setAssignedAt(LocalDateTime.now());
+        trip.setStatus(TripStatus.ASSIGNED);
+
+        tripRepository.save(trip);
+
+        orderRepository.save(order);
+        driverRepository.save(driver);
+        vehicleRepository.save(vehicle);
+    }
+
+    public void startOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
+
+        if (order.getStatus() != OrderStatus.ASSIGNED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is not in ASSIGNED status");
+        }
+
+        order.setStatus(OrderStatus.IN_TRANSIT);
+        orderRepository.save(order);
+    }
+
+    public void completeOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
+
+        if (order.getStatus() != OrderStatus.IN_TRANSIT) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is not in IN_TRANSIT status");
+        }
+
+        order.setStatus(OrderStatus.COMPLETED);
+        orderRepository.save(order);
     }
 }

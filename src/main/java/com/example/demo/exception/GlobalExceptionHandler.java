@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
         log.warn("User not found by email: {}", ex.getMessage());
         Map<String, String> errors = new HashMap<>();
         errors.put("message", "Користувача зі вказаним email не знайдено");
-        return ResponseEntity.badRequest().body(errors);
+        return ResponseEntity.notFound().build();
     }
 
     //Orders exceptions
@@ -98,4 +98,12 @@ public class GlobalExceptionHandler {
         errors.put("message", "Некоректна дата та час для пік-апу");
         return ResponseEntity.badRequest().body(errors);
     }
+
+    @ExceptionHandler(NoAvailableDriverExistsException.class)
+    public ResponseEntity<Map<String, String>> handleNoAvailableDriverExistsException(NoAvailableDriverExistsException ex) {
+        log.warn("No available driver exists: {}", ex.getMessage());
+        return ResponseEntity.notFound().build();
+    }
+
+
 }

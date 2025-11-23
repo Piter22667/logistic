@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.response.DriverForOrderAssigningDto;
 import com.example.demo.dto.response.DriversResponseDto;
 import com.example.demo.dto.reuqest.DriverRequestDto;
 import com.example.demo.dto.reuqest.UpdateDriverDto;
@@ -144,5 +145,10 @@ public class DriverService {
         driver.setStatus(updateDriverStatusDto.getDriverStatus());
         driverRepository.save(driver);
         return DriverMapper.toDto(driver);
+    }
+
+    public List<DriverForOrderAssigningDto> getDriverByStatusAvailable() {
+        List<DriverForOrderAssigningDto> driver = driverRepository.getDriverByStatusAvailable();
+        return driver;
     }
 }

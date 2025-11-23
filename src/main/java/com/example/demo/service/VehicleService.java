@@ -85,4 +85,6 @@ public class VehicleService {
 
         return VehicleMapper.toTrailerForCargoTypeFromClientDto(vehicles);
     }
+
+
 }
