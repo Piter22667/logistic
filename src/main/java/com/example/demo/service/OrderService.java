@@ -40,8 +40,9 @@ public class OrderService {
     private final VehicleRepository vehicleRepository;
     private final DriverRepository driverRepository;
     private final TripRepository tripRepository;
+    private final EmailService emailService;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderStatusHistoryRepository orderStatusHistoryRepository, RecommendationService recommendationService, MapBoxService mapBoxService, PriceCalculator priceCalculator, VehicleRepository vehicleRepository, DriverRepository driverRepository, TripRepository tripRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderStatusHistoryRepository orderStatusHistoryRepository, RecommendationService recommendationService, MapBoxService mapBoxService, PriceCalculator priceCalculator, VehicleRepository vehicleRepository, DriverRepository driverRepository, TripRepository tripRepository, EmailService emailService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.orderStatusHistoryRepository = orderStatusHistoryRepository;
@@ -51,6 +52,7 @@ public class OrderService {
         this.vehicleRepository = vehicleRepository;
         this.driverRepository = driverRepository;
         this.tripRepository = tripRepository;
+        this.emailService = emailService;
     }
 
     public OrderCalculationAndRouteVisualizationResponseDto calculateOrderAndRoute(
@@ -189,6 +191,8 @@ public class OrderService {
         orderStatusHistory.setComment("Order created by client");
         orderStatusHistoryRepository.save(orderStatusHistory);
 
+        emailService.sendOrderCreatedEmail(client.getEmail(), order.getId(), order.getOriginAddress(), order.getDestinationAddress(), order.getScheduledPickupDate(), order.getCost());
+
         return OrderMapper.toDto(order, priceBreakdown, total, senderContactInfo, recipientContactInfo);
     }
 
@@ -219,6 +223,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
 
+
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found with id: " + driverId));
 
@@ -242,6 +247,8 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle trailer type does not match order trailer type");
         }
 
+        OrderStatus oldStatus = order.getStatus();
+
         order.setStatus(OrderStatus.ASSIGNED);
         driver.setStatus(DriverStatus.BUSY);
         vehicle.setStatus(VehicleStatus.IN_USE);
@@ -258,6 +265,8 @@ public class OrderService {
         orderRepository.save(order);
         driverRepository.save(driver);
         vehicleRepository.save(vehicle);
+
+        emailService.sendOrderStatusChangedEmail(order.getClient().getEmail(), order.getId(), oldStatus, order.getStatus(), order.getOriginAddress(), order.getDestinationAddress());
     }
 
     public void startOrder(Long orderId) {
@@ -268,10 +277,21 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is not in ASSIGNED status");
         }
 
+        OrderStatus oldStatus = order.getStatus();
         order.setStatus(OrderStatus.IN_TRANSIT);
         orderRepository.save(order);
+
+        emailService.sendOrderStatusChangedEmail(
+                order.getClient().getEmail(),
+                order.getId(),
+                oldStatus,
+                order.getStatus(),
+                order.getOriginAddress(),
+                order.getDestinationAddress()
+        );
     }
 
+    @Transactional
     public void completeOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
@@ -280,7 +300,36 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is not in IN_TRANSIT status");
         }
 
+        Trip trip = tripRepository.findTripById(order.getTrip().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trip not found for order: " + orderId));
+
+        Driver driver = driverRepository.findById(trip.getDriver().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Driver not found for trip: " + trip.getId()));
+
+        Vehicle vehicle = vehicleRepository.findById(trip.getVehicle().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehicle not found for trip: " + trip.getId()));
+
+        driver.setStatus(DriverStatus.AVAILABLE);
+        vehicle.setStatus(VehicleStatus.AVAILABLE);
+        trip.setStatus(TripStatus.COMPLETED);
+
+
+        OrderStatus oldStatus = order.getStatus();
         order.setStatus(OrderStatus.COMPLETED);
+
+        driverRepository.save(driver);
+        vehicleRepository.save(vehicle);
+        tripRepository.save(trip);
+
         orderRepository.save(order);
+
+        emailService.sendOrderStatusChangedEmail(
+                order.getClient().getEmail(),
+                order.getId(),
+                oldStatus,
+                order.getStatus(),
+                order.getOriginAddress(),
+                order.getDestinationAddress()
+        );
     }
 }
