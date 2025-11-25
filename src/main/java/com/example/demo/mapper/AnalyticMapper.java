@@ -81,6 +81,4 @@ public class AnalyticMapper {
                 .completedRate(completedRate)
                 .build();
     }
-
-    public
 }
