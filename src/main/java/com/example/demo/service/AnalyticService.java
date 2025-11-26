@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.response.*;
 import com.example.demo.entity.AnalyticsSnapshot;
+import com.example.demo.enums.PeriodType;
 import com.example.demo.mapper.AnalyticMapper;
 import com.example.demo.repository.AnalyticSnapshotRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

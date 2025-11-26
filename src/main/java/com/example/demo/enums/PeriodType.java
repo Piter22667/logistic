@@ -1,4 +1,4 @@
-package com.example.demo.dto.response;
+package com.example.demo.enums;
 
 public enum PeriodType{
     DAY("day"),

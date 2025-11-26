@@ -25,8 +25,8 @@ public class AnalyticMapper {
     public ComparePeriodsResponseDto mapCompareRow(Object[] row, int scaleMoney, int scalePercent) {
         String metric = row[0] != null ? row[0].toString() : null;
 
-        BigDecimal currentValue = toBigDecimal(row.length > 1 ? row[1] : null).setScale(scaleMoney, BigDecimal.ROUND_HALF_UP);
-        BigDecimal previousValue = toBigDecimal(row.length > 2 ? row[2] : null).setScale(scaleMoney, BigDecimal.ROUND_HALF_UP);
+        BigDecimal currentValue = toBigDecimal(row.length > 1 ? row[1] : null).setScale(scaleMoney, RoundingMode.HALF_UP);
+        BigDecimal previousValue = toBigDecimal(row.length > 2 ? row[2] : null).setScale(scaleMoney, RoundingMode.HALF_UP);
 
         BigDecimal change = currentValue.subtract(previousValue).setScale(scaleMoney, RoundingMode.HALF_UP);
 
@@ -48,13 +48,13 @@ public class AnalyticMapper {
                 .build();
     }
 
-    public OrderStatusAnalyticResponseDto mapOrderStatusRow(Object[] row, int scaleTotalRevenue, int scaleAvgOrderValue){
+    public OrderStatusAnalyticResponseDto mapOrderStatusRow(Object[] row, int scaleTotalRevenue, int scaleAvgOrderValue) {
         String status = row[0] != null ? row[0].toString() : null;
 
         Long orderCount = (Long) row[1];
         BigDecimal percentage = (BigDecimal) row[2];
-        BigDecimal totalRevenue = toBigDecimal(row.length > 3 ? row[3] : null).setScale(scaleTotalRevenue, BigDecimal.ROUND_HALF_UP);
-        BigDecimal avgOrderValue = toBigDecimal(row.length > 4 ? row[4] : null).setScale(scaleAvgOrderValue, BigDecimal.ROUND_HALF_UP);
+        BigDecimal totalRevenue = toBigDecimal(row.length > 3 ? row[3] : null).setScale(scaleTotalRevenue, RoundingMode.HALF_UP);
+        BigDecimal avgOrderValue = toBigDecimal(row.length > 4 ? row[4] : null).setScale(scaleAvgOrderValue, RoundingMode.HALF_UP);
 
         return OrderStatusAnalyticResponseDto.builder()
                 .status(status)
@@ -65,12 +65,12 @@ public class AnalyticMapper {
                 .build();
     }
 
-    public DynamicAnalyticDto mapToDynamicRow(Object[] row, int scaleAverageOrderValue){
+    public DynamicAnalyticDto mapToDynamicRow(Object[] row, int scaleAverageOrderValue) {
         String period = row[0] != null ? row[0].toString() : null;
 
         Long orderCount = (Long) row[1];
-        BigDecimal revenue = toBigDecimal(row[2]).setScale(scaleAverageOrderValue, BigDecimal.ROUND_HALF_UP);
-        BigDecimal averageOrderValue = toBigDecimal(row[3]).setScale(scaleAverageOrderValue, BigDecimal.ROUND_HALF_UP);
+        BigDecimal revenue = toBigDecimal(row[2]).setScale(scaleAverageOrderValue, RoundingMode.HALF_UP);
+        BigDecimal averageOrderValue = toBigDecimal(row[3]).setScale(scaleAverageOrderValue, RoundingMode.HALF_UP);
         BigDecimal completedRate = (BigDecimal) row[4];
 
         return DynamicAnalyticDto.builder()

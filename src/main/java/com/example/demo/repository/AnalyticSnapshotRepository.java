@@ -1,6 +1,5 @@
 package com.example.demo.repository;
 
-import com.example.demo.dto.response.PeriodType;
 import com.example.demo.entity.AnalyticsSnapshot;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -33,12 +32,4 @@ public interface AnalyticSnapshotRepository extends JpaRepository<AnalyticsSnaps
                                   @Param("p_current_end") LocalDate currentEnd,
                                   @Param("p_previous_start") LocalDate previousStart,
                                   @Param("p_previous_end") LocalDate previousEnd);
-
-
-//    p_current_start := '10.05.2025',
-//    p_current_end := '25.11.2025',
-//    p_previous_start := '10.01.2025',
-//    p_previous_end := '10.05.2025'
-
-
 }

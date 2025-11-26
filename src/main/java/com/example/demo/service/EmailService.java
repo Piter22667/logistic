@@ -45,7 +45,7 @@ public class EmailService {
 
 
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to send order creation email" + e.getMessage());
         }
     }
 
@@ -71,7 +71,7 @@ public class EmailService {
             log.info("Order status changed email sent successfully to: {}", toEmail);
 
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to send order status changed email" + e.getMessage());
         }
     }
 

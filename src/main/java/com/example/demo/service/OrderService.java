@@ -269,6 +269,7 @@ public class OrderService {
         emailService.sendOrderStatusChangedEmail(order.getClient().getEmail(), order.getId(), oldStatus, order.getStatus(), order.getOriginAddress(), order.getDestinationAddress());
     }
 
+    @Transactional
     public void startOrder(Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with id: " + orderId));
